@@ -190,5 +190,6 @@ rm ~/.xyron-code/config.json && xyroncode
 [![GitHub](https://img.shields.io/badge/GitHub-ShadowNex293-22d3ee?style=flat-square&logo=github&logoColor=white)](https://github.com/ShadowNex293)
 [![TikTok](https://img.shields.io/badge/TikTok-@mr.shadownex-4ade80?style=flat-square&logo=tiktok&logoColor=white)](https://tiktok.com/@mr.shadownex)
 [![Saweria](https://img.shields.io/badge/Saweria-Support-fb923c?style=flat-square)](https://saweria.co/shadownex)
+[![WhatsApp Channel](https://img.shields.io/badge/WhatsApp-Channel-25D366?style=flat-square&logo=whatsapp&logoColor=white)](https://whatsapp.com/channel/0029Vb8Lge5FHWq3fTan4V0J)
 
 </div>
