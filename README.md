@@ -12,6 +12,7 @@
 [![Providers](https://img.shields.io/badge/Providers-13-22d3ee?style=flat-square)](https://github.com/Shadownex293/xyron-code)
 [![Platform](https://img.shields.io/badge/Termux-Android-4ade80?style=flat-square&logo=android&logoColor=white)](https://github.com/Shadownex293/xyron-code)
 [![License](https://img.shields.io/badge/License-MIT-fb923c?style=flat-square)](https://github.com/Shadownex293/xyron-code)
+<img src="https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge&logo=linux">
 
 **Terminal AI Coding Assistant — built in Python**
 
