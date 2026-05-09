@@ -61,6 +61,7 @@ export function TerminalMockup() {
     <div className="h-6" />
   </>
 )}
+
         {step >= 3 && (
           <>
             <div className="flex gap-3">
