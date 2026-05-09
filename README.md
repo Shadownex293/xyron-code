@@ -1,6 +1,23 @@
-# Xyron Code
+<div align="center">
+
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=32&duration=3000&pause=1000&color=A78BFA&center=true&vCenter=true&width=500&lines=Xyron+Code;Terminal+AI+Assistant;by+ShadowNex" alt="Xyron Code" />
+
+<br/>
+
+![Preview](https://github.com/Shadownex293/xyron-code/blob/main/Screenshot_20260510-012715.jpg)
+
+<br/>
+
+[![Python](https://img.shields.io/badge/Python-3.10+-a78bfa?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Providers](https://img.shields.io/badge/Providers-13-22d3ee?style=flat-square)](https://github.com/Shadownex293/xyron-code)
+[![Platform](https://img.shields.io/badge/Termux-Android-4ade80?style=flat-square&logo=android&logoColor=white)](https://github.com/Shadownex293/xyron-code)
+[![License](https://img.shields.io/badge/License-MIT-fb923c?style=flat-square)](https://github.com/Shadownex293/xyron-code)
 
 **Terminal AI Coding Assistant — built in Python**
+
+</div>
+
+---
 
 Xyron Code adalah AI coding assistant yang jalan langsung di terminal. Multi-provider, streaming real-time, bisa baca & tulis file, jalankan shell command, dan search web — semua dari satu sesi CLI. Dibangun untuk developer yang kerja di environment terbatas termasuk **Termux Android**.
 
@@ -104,8 +121,6 @@ Config tersimpan di `~/.xyron-code/config.json`.
 
 ## Tools
 
-AI bisa menggunakan tools berikut secara otomatis:
-
 | Tool | Fungsi |
 |---|---|
 | `read_file` | Baca isi file |
@@ -116,18 +131,18 @@ AI bisa menggunakan tools berikut secara otomatis:
 | `web_search` | Search web via Tavily |
 | `web_fetch` | Fetch konten dari URL |
 
-> Web search & fetch butuh `TAVILY_API_KEY` (gratis 1000 req/month di [app.tavily.com](https://app.tavily.com))
+> Web search & fetch butuh `TAVILY_API_KEY` — gratis 1000 req/month di [app.tavily.com](https://app.tavily.com)
 
 ---
 
-## Skills (Auto-detect)
+## Skills
 
-| Skill | Trigger Keywords |
+| Skill | Trigger |
 |---|---|
-| **frontend-design** | ui, react, html, css, component, interface |
-| **backend-architect** | api, server, route, database, auth, endpoint |
-| **security-auditor** | security, audit, vulnerability, review |
-| **refactor-master** | refactor, clean, optimize, simplify |
+| **frontend-design** | ui, react, html, css, component |
+| **backend-architect** | api, server, route, database, auth |
+| **security-auditor** | security, audit, vulnerability |
+| **refactor-master** | refactor, clean, optimize |
 
 ---
 
@@ -135,44 +150,19 @@ AI bisa menggunakan tools berikut secara otomatis:
 
 ```
 xyron-code/
-├── xyron_code.py            ← entry point + REPL
-├── install.sh               ← install script
+├── xyron_code.py
+├── install.sh
 ├── providers/
-│   ├── base.py
-│   ├── groq_provider.py
-│   ├── openrouter_provider.py
-│   ├── other_providers.py   ← semua provider lainnya
-│   └── factory.py
 ├── tools/
-│   ├── file_ops.py
-│   ├── shell_tool.py
-│   ├── search_tool.py
-│   └── web_fetch.py
 ├── skills/
-│   ├── frontend.py
-│   ├── backend.py
-│   ├── security.py
-│   └── refactor.py
 ├── utils/
-│   ├── config.py
-│   ├── setup.py             ← wizard interaktif
-│   ├── session.py
-│   ├── cache.py
-│   ├── tokenizer.py
-│   ├── retry.py
-│   ├── model_catalog.py
-│   ├── context_manager.py
-│   ├── system_prompt.py
-│   └── ui.py
 └── docs/
-    └── index.html           ← landing page
+    └── index.html
 ```
 
 ---
 
 ## Dependencies
-
-Hanya 3 package:
 
 ```bash
 pip install httpx python-dotenv rich
@@ -183,16 +173,22 @@ pip install httpx python-dotenv rich
 ## Reset
 
 ```bash
-# Ganti provider lewat dalam sesi:
+# Ganti provider di dalam sesi:
 /provider
 
-# Atau reset total:
-rm ~/.xyron-code/config.json
-xyroncode
+# Reset total:
+rm ~/.xyron-code/config.json && xyroncode
 ```
 
 ---
 
-## By
+<div align="center">
 
-**ShadowNex** — [@TELEGRAM DEVELOPER](https://t.me/SHADOWNEX2) · [GitHub Developer](https://github.com/ShadowNex293) · [TikTok](https://tiktok.com/@mr.shadownex) · [Saweria](https://saweria.co/shadownex)
+**by ShadowNex**
+
+[![Telegram](https://img.shields.io/badge/Telegram-@SHADOWNEX2-a78bfa?style=flat-square&logo=telegram&logoColor=white)](https://t.me/SHADOWNEX2)
+[![GitHub](https://img.shields.io/badge/GitHub-ShadowNex293-22d3ee?style=flat-square&logo=github&logoColor=white)](https://github.com/ShadowNex293)
+[![TikTok](https://img.shields.io/badge/TikTok-@mr.shadownex-4ade80?style=flat-square&logo=tiktok&logoColor=white)](https://tiktok.com/@mr.shadownex)
+[![Saweria](https://img.shields.io/badge/Saweria-Support-fb923c?style=flat-square)](https://saweria.co/shadownex)
+
+</div>
