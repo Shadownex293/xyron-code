@@ -51,7 +51,7 @@ bash install.sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # 4. Jalankan
-xyroncode
+xyroncodex
 ```
 
 > **Termux:** `bash install.sh` otomatis detect, langsung bisa tanpa export PATH.
