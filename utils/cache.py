@@ -2,7 +2,7 @@ import json
 import time
 from pathlib import Path
 
-CACHE_DIR = Path.home() / ".xyron-code-cache"
+CACHE_DIR = Path.home() / ".xyron-codex-cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_FILE = CACHE_DIR / "prompts.json"
 TTL = 24 * 60 * 60

@@ -2,7 +2,7 @@ import json
 import time
 from pathlib import Path
 
-CACHE_DIR = Path.home() / ".xyron-code-cache"
+CACHE_DIR = Path.home() / ".xyron-codex-cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CATALOG_FILE = CACHE_DIR / "model-catalog.json"
 CACHE_TTL = 3600

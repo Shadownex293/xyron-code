@@ -1,5 +1,5 @@
 """
-Setup wizard interaktif untuk Xyron Code.
+Setup wizard interaktif untuk Xyron Codex.
 Dipanggil saat tidak ada saved config / user belum pernah setup.
 """
 
@@ -8,7 +8,7 @@ import sys
 import json
 from pathlib import Path
 
-CONFIG_DIR  = Path.home() / ".xyron-code"
+CONFIG_DIR  = Path.home() / ".xyron-codex"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 PROVIDERS = [
@@ -280,7 +280,7 @@ def _ask_save(provider: dict, api_key: str, model: str) -> bool:
                 "model":    model,
             })
             print()
-            print("  " + green("✓") + "  " + white("Tersimpan di ~/.xyron-code/config.json"))
+            print("  " + green("✓") + "  " + white("Tersimpan di ~/.xyron-codex/config.json"))
             return True
         if raw == "2":
             print()

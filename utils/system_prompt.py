@@ -26,7 +26,7 @@ def build_system_prompt(active_skills: list, provider_appendix: str = "") -> str
     skill_section = "\n\n".join(s["prompt"] for s in active_skills) if active_skills else ""
     cwd = os.getcwd()
 
-    return f"""You are Xyron Code — an elite AI coding assistant built by ShadowNex
+    return f"""You are Xyron Codex — an elite AI coding assistant built by ShadowNex
 
 ## CORE IDENTITY
 - Production-grade engineer, not just code generator

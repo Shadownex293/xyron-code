@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-SESSION_DIR = Path.home() / ".xyron-code-sessions"
+SESSION_DIR = Path.home() / ".xyron-codex-sessions"
 SESSION_DIR.mkdir(parents=True, exist_ok=True)
 
 class SessionManager:

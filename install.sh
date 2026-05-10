@@ -1,12 +1,12 @@
 #!/bin/bash
-# Xyron Code — Install Script
+# Xyron Codex — Install Script
 # Jalankan sekali: bash install.sh
-# Setelah itu ketik "xyroncode" dari mana saja
+# Setelah itu ketik "xyroncodex" dari mana saja
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENTRY="$SCRIPT_DIR/xyron_code.py"
+ENTRY="$SCRIPT_DIR/xyron_codex.py"
 
 echo ""
 echo "  ██╗  ██╗██╗   ██╗██████╗  ██████╗ ███╗  ██╗"
@@ -54,8 +54,8 @@ else
     BIN_DIR="$HOME/.local/bin"
 fi
 
-# ── Buat wrapper "xyroncode" ──────────────────────────────────────────────────
-WRAPPER_PATH="$BIN_DIR/xyroncode"
+# ── Buat wrapper "xyroncodex" ──────────────────────────────────────────────────
+WRAPPER_PATH="$BIN_DIR/xyroncodex"
 
 cat > "$WRAPPER_PATH" << WRAPPER
 #!/bin/bash
@@ -82,7 +82,7 @@ if ! echo "$PATH" | grep -q "$BIN_DIR"; then
     if [ -n "$SHELL_RC" ]; then
         if ! grep -q "export PATH.*$BIN_DIR" "$SHELL_RC" 2>/dev/null; then
             echo "" >> "$SHELL_RC"
-            echo "# Xyron Code" >> "$SHELL_RC"
+            echo "# Xyron Codex" >> "$SHELL_RC"
             echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$SHELL_RC"
             echo "  ✓  PATH ditambah ke $SHELL_RC"
         fi
@@ -103,5 +103,5 @@ fi
 echo ""
 echo "  ✓  SELESAI! Sekarang ketik:"
 echo ""
-echo "       xyroncode"
+echo "       xyroncodex"
 echo ""

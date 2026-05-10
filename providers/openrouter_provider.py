@@ -48,8 +48,8 @@ class OpenRouterProvider(BaseProvider):
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://xyroncode.dev",
-                    "X-Title": "Xyron Code",
+                    "HTTP-Referer": "https://xyroncodex.dev",
+                    "X-Title": "Xyron Codex",
                 },
                 json=payload,
                 timeout=120,

@@ -53,7 +53,7 @@ def print_banner(provider_name: str, model: str, cfg: dict = None):
     print("  " + C.brand("██╔╝╚██╗   ██║   ██║  ██║╚██████╔╝██║ ╚███║"))
     print("  " + C.brand("╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚══╝"))
     print()
-    print("  " + C.dim("Xyron Code Ai Agent ·  By ShadowNex  ·  V1.0"))
+    print("  " + C.dim("Xyron Codex Ai Agent ·  By ShadowNex  ·  V1.0"))
     print()
     w = get_width()
     parts = [
@@ -267,7 +267,7 @@ def build_token_bar(used: int, max_: int, length: int = 20) -> str:
     return C.dim("[") + color("█" * filled) + C.dim("░" * (length - filled)) + C.dim("]")
 
 
-_HIST_DIR  = Path.home() / ".xyronccode"
+_HIST_DIR  = Path.home() / ".xyroncodex"
 _HIST_FILE = _HIST_DIR / "model-history.json"
 
 
