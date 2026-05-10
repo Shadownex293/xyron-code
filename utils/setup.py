@@ -13,6 +13,15 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 
 PROVIDERS = [
     {
+        "id":      "copilot",
+        "label":   "Copilot (GRATIS — No API Key!)",
+        "company": "ShadowNex",
+        "free":    "100% gratis, langsung pakai, tidak perlu API key",
+        "url":     "https://xyron-rest-api.vercel.app",
+        "models":  ["copilot-free"],
+        "keyless": True,
+    },
+    {
         "id":      "gemini",
         "label":   "Gemini",
         "company": "Google",
@@ -199,6 +208,19 @@ def _select_provider() -> dict:
 # ── API key input ──────────────────────────────────────────────────────────────
 
 def _input_api_key(provider: dict) -> str:
+    # Keyless provider — tidak butuh API key sama sekali
+    if provider.get("keyless"):
+        print()
+        _print_separator()
+        print()
+        print("  " + brand("◆") + "  " + white(f"{provider['label']}"))
+        print()
+        print("  " + green("✓") + "  " + white("Provider ini GRATIS — tidak perlu API key!"))
+        print("  " + dim("Langsung bisa dipakai tanpa daftar apapun."))
+        print("  " + dim(f"Endpoint: {provider['url']}"))
+        print()
+        return ""   # empty string = keyless
+
     print()
     _print_separator()
     print()
@@ -343,7 +365,16 @@ def maybe_change_provider() -> dict | None:
 
 PLACEHOLDER_PATTERNS = ("...", "your_key_here", "sk-...", "gsk_...", "tvly-...")
 
-def _is_valid_key_val(val: str) -> bool:
+# Providers that need no key — empty string is valid for these
+_KEYLESS_IDS = {"copilot"}
+
+def _is_valid_key_val(val: str, provider_id: str = "") -> bool:
+    """
+    Return True jika val adalah API key yang valid.
+    Untuk keyless provider (copilot dll), empty string juga valid.
+    """
+    if provider_id in _KEYLESS_IDS:
+        return True   # keyless — selalu valid
     if not val or not val.strip():
         return False
     v = val.strip()

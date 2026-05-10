@@ -1,6 +1,7 @@
 import os
 from .groq_provider import GroqProvider
 from .openrouter_provider import OpenRouterProvider
+from .copilot_provider import CopilotProvider
 from .other_providers import (
     GeminiProvider, NvidiaProvider, CerebrasProvider, MistralProvider,
     XAIProvider, SambanovaProvider, TogetherProvider, KimiProvider,
@@ -8,6 +9,7 @@ from .other_providers import (
 )
 
 PROVIDER_REGISTRY = {
+    "copilot":    CopilotProvider,   # FREE — no API key needed
     "groq":       GroqProvider,
     "openrouter": OpenRouterProvider,
     "gemini":     GeminiProvider,
@@ -24,6 +26,7 @@ PROVIDER_REGISTRY = {
 }
 
 KEY_MAP = {
+    "copilot":    None,              # keyless — no env var needed
     "groq":       "GROQ_API_KEY",
     "openrouter": "OPENROUTER_API_KEY",
     "gemini":     "GEMINI_API_KEY",
@@ -42,9 +45,14 @@ KEY_MAP = {
 PRIORITY_ORDER = [
     "groq", "openrouter", "gemini", "deepseek", "cerebras", "mistral",
     "xai", "kimi", "qwen", "sambanova", "together", "minimax", "nvidia",
+    # copilot is last in auto-detect (it's always available but we prefer keyed providers)
+    "copilot",
 ]
 
 PLACEHOLDER_PATTERNS = ("...", "your_key_here", "sk-...", "gsk_...", "tvly-...")
+
+# Providers that work without any API key
+KEYLESS_PROVIDERS = {"copilot"}
 
 
 def get_available_providers():
@@ -66,15 +74,28 @@ def _is_valid_key(val: str) -> bool:
 
 
 def auto_detect_provider():
+    """
+    Try keyed providers first (in priority order), then fall back to
+    keyless providers so there's always something available.
+    """
     for name in PRIORITY_ORDER:
+        if name in KEYLESS_PROVIDERS:
+            # Handled below as guaranteed fallback
+            continue
         env_key = KEY_MAP.get(name)
         val = os.environ.get(env_key, "") if env_key else ""
         if _is_valid_key(val):
+            return name
+    # No keyed provider found — return first keyless provider
+    for name in PRIORITY_ORDER:
+        if name in KEYLESS_PROVIDERS:
             return name
     return None
 
 
 def get_api_key_for_provider(name):
+    if name in KEYLESS_PROVIDERS:
+        return ""   # keyless — return empty string (not None) so callers don't break
     env_key = KEY_MAP.get(name)
     return os.environ.get(env_key, "").strip() if env_key else None
 

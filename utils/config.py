@@ -14,23 +14,26 @@ def load_config() -> dict:
 
     
     saved = load_saved_config()
-    if saved and saved.get("provider") and saved.get("api_key") and _is_valid_key_val(saved["api_key"]):
-        _config = _build(saved["provider"], saved["api_key"], saved.get("model", "auto"))
-        return _config
+    if saved and saved.get("provider"):
+        prov = saved["provider"]
+        key  = saved.get("api_key", "")
+        if _is_valid_key_val(key, prov):
+            _config = _build(prov, key, saved.get("model", "auto"))
+            return _config
 
 
     from providers.factory import auto_detect_provider, get_api_key_for_provider
     env_provider = os.environ.get("XYRON_PROVIDER", "auto")
     if env_provider != "auto":
         key = get_api_key_for_provider(env_provider)
-        if key and _is_valid_key_val(key):
+        if key is not None and _is_valid_key_val(key, env_provider):
             _config = _build(env_provider, key, os.environ.get("XYRON_DEFAULT_MODEL", "auto"))
             return _config
     else:
         detected = auto_detect_provider()
         if detected:
             key = get_api_key_for_provider(detected)
-            if key and _is_valid_key_val(key):
+            if key is not None and _is_valid_key_val(key, detected):
                 _config = _build(detected, key, os.environ.get("XYRON_DEFAULT_MODEL", "auto"))
                 return _config
 
