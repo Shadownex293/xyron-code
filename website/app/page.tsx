@@ -11,7 +11,7 @@ export default function Page() {
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Terminal className="w-5 h-5 text-indigo-400" />
-            <span className="font-bold text-sm tracking-tight text-white">XyronCode</span>
+            <span className="font-bold text-sm tracking-tight text-white">XyronCodeX</span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
             <a href="#tentang" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Tentang</a>
@@ -138,7 +138,7 @@ export default function Page() {
             {[ 
               { step: 1, title: 'Salin Repository', desc: 'Ambil code dari source utama di GitHub ke dalam penyimpanan perangkat yang sedang digunakan.', code: 'git clone https://github.com/Shadownex293/xyron-code.git\ncd xyron-code' },
               { step: 2, title: 'Jalankan Skrip', desc: 'Skrip ini akan mengelola pemasangan dependensi yang diperlukan agar sistem dapat berjalan.', code: 'bash install.sh\nexport PATH="$HOME/.local/bin:$PATH"' },
-              { step: 3, title: 'Selesaikan Setelan', desc: 'Tentukan pilihan koneksi parameter dan selesaikan integrasi kredensial lokal ke dalam program.', code: 'xyroncode' }
+              { step: 3, title: 'Selesaikan Setelan', desc: 'Tentukan pilihan koneksi parameter dan selesaikan integrasi kredensial lokal ke dalam program.', code: 'xyroncodex' }
             ].map((item, i) => (
               <ScrollReveal key={i} delay={0.1}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
