@@ -29,6 +29,11 @@ from tools import ALL_TOOLS, execute_tool
 
 MAX_AUTO_CONTINUE = 4
 
+
+def clear_screen():
+    """Clear terminal — cross-platform (Linux/Termux/Windows)."""
+    os.system("cls" if os.name == "nt" else "clear")
+
 def fuzzy_match_provider(query: str, providers: list) -> str | None:
     q = query.lower().replace(" ", "")
     exact = next((p for p in providers if p.lower() == q), None)
@@ -286,6 +291,7 @@ async def start_interactive():
         "last_partial":  "",
     }
 
+    clear_screen()
     print_banner(provider.name, model, config)
 
     session = SessionManager("default")
@@ -314,6 +320,8 @@ async def start_interactive():
             continue
 
         user_input = raw_input
+        clear_screen()
+        print_banner(state["provider"].name, state["model"], config)
         print_user_box(user_input)
 
         detected = detect_skills(user_input)
