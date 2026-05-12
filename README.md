@@ -4,7 +4,7 @@
 
 <br/>
 
-![Preview](https://github.com/Shadownex293/xyron-code/blob/main/Screenshot_20260510-012715.jpg)
+![Logo](https://github.com/Shadownex293/xyron-code/blob/main/file_00000000a0ac71fa84b2c4baf75c30cf.png)
 
 <br/>
 
@@ -14,26 +14,26 @@
 [![License](https://img.shields.io/badge/License-MIT-fb923c?style=flat-square)](https://github.com/Shadownex293/xyron-code)
 <img src="https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge&logo=linux">
 
-**Terminal AI Coding Assistant — built in Python**
+**Terminal AI Coding Assistant â€” built in Python**
 
 </div>
 
 ---
 
-Xyron Code adalah AI coding assistant yang jalan langsung di terminal. Multi-provider, streaming real-time, bisa baca & tulis file, jalankan shell command, dan search web — semua dari satu sesi CLI. Dibangun untuk developer yang kerja di environment terbatas termasuk **Termux Android**.
+Xyron Code adalah AI coding assistant yang jalan langsung di terminal. Multi-provider, streaming real-time, bisa baca & tulis file, jalankan shell command, dan search web â€” semua dari satu sesi CLI. Dibangun untuk developer yang kerja di environment terbatas termasuk **Termux Android**.
 
 ---
 
 ## Features
 
-- **Multi-provider** — 13 AI provider didukung (Gemini, Groq, DeepSeek, OpenRouter, Mistral, xAI, Cerebras, SambaNova, Together, NVIDIA NIM, Kimi, Qwen, MiniMax)
-- **Streaming real-time** — response muncul karakter demi karakter, auto-continue kalau kepotong
-- **Built-in tools** — baca/tulis file, jalankan shell command, grep codebase, web search & fetch
-- **Skill detection** — otomatis detect context: frontend, backend, security audit, refactor
-- **Session memory** — conversation tersimpan otomatis, bisa resume kapanpun
-- **Task roadmap** — untuk task kompleks, AI buat roadmap dan track progress
-- **Setup wizard** — pilih provider & input API key lewat wizard interaktif saat pertama run
-- **Termux-friendly** — install script detect environment Termux otomatis
+- **Multi-provider** â€” 13 AI provider didukung (Gemini, Groq, DeepSeek, OpenRouter, Mistral, xAI, Cerebras, SambaNova, Together, NVIDIA NIM, Kimi, Qwen, MiniMax)
+- **Streaming real-time** â€” response muncul karakter demi karakter, auto-continue kalau kepotong
+- **Built-in tools** â€” baca/tulis file, jalankan shell command, grep codebase, web search & fetch
+- **Skill detection** â€” otomatis detect context: frontend, backend, security audit, refactor
+- **Session memory** â€” conversation tersimpan otomatis, bisa resume kapanpun
+- **Task roadmap** â€” untuk task kompleks, AI buat roadmap dan track progress
+- **Setup wizard** â€” pilih provider & input API key lewat wizard interaktif saat pertama run
+- **Termux-friendly** â€” install script detect environment Termux otomatis
 
 ---
 
@@ -63,18 +63,18 @@ xyroncodex
 Saat pertama run, wizard interaktif akan muncul:
 
 ```
-  ◆  Pilih provider AI
-
-   1.  Gemini      [Google]       Free — 1500 req/day
-   2.  Groq        [Groq]         Free — 1M tokens/day
-   3.  DeepSeek    [DeepSeek AI]  V3 & R1 — sangat murah
-   4.  OpenRouter               500+ models
+  â—†  Pilih provider AI
+   1.  Copilot (Free)
+   2.  Gemini      [Google]       Free â€” 1500 req/day
+   3.  Groq        [Groq]         Free â€” 1M tokens/day
+   4.  DeepSeek    [DeepSeek AI]  V3 & R1 â€” sangat murah
+   5.  OpenRouter               500+ models
    ...
 
-  ❯  Pilih nomor:
+  â¯  Pilih nomor:
 ```
 
-Pilih provider → masukkan API key → pilih simpan atau sesi ini saja. Selesai.
+Pilih provider â†’ masukkan API key â†’ pilih simpan atau sesi ini saja. Selesai.
 
 Config tersimpan di `~/.xyron-code/config.json`.
 
@@ -84,11 +84,11 @@ Config tersimpan di `~/.xyron-code/config.json`.
 
 | Provider | Env Key | Keterangan |
 |---|---|---|
-| Gemini | `GEMINI_API_KEY` | Free — 1500 req/day |
-| Groq | `GROQ_API_KEY` | Free — 1M tokens/day |
+| Gemini | `GEMINI_API_KEY` | Free â€” 1500 req/day |
+| Groq | `GROQ_API_KEY` | Free â€” 1M tokens/day |
 | DeepSeek | `DEEPSEEK_API_KEY` | V3 & R1, sangat murah |
-| Cerebras | `CEREBRAS_API_KEY` | Free — 1M tokens/day |
-| Mistral | `MISTRAL_API_KEY` | Free — 1B tokens/month |
+| Cerebras | `CEREBRAS_API_KEY` | Free â€” 1M tokens/day |
+| Mistral | `MISTRAL_API_KEY` | Free â€” 1B tokens/month |
 | SambaNova | `SAMBANOVA_API_KEY` | Free tier |
 | OpenRouter | `OPENROUTER_API_KEY` | 500+ model, ada yang gratis |
 | xAI | `XAI_API_KEY` | $25 signup credits |
@@ -132,7 +132,7 @@ Config tersimpan di `~/.xyron-code/config.json`.
 | `web_search` | Search web via Tavily |
 | `web_fetch` | Fetch konten dari URL |
 
-> Web search & fetch butuh `TAVILY_API_KEY` — gratis 1000 req/month di [app.tavily.com](https://app.tavily.com)
+> Web search & fetch butuh `TAVILY_API_KEY` â€” gratis 1000 req/month di [app.tavily.com](https://app.tavily.com)
 
 ---
 
@@ -151,14 +151,14 @@ Config tersimpan di `~/.xyron-code/config.json`.
 
 ```
 xyron-code/
-├── xyron_code.py
-├── install.sh
-├── providers/
-├── tools/
-├── skills/
-├── utils/
-└── docs/
-    └── index.html
+â”œâ”€â”€ xyron_code.py
+â”œâ”€â”€ install.sh
+â”œâ”€â”€ providers/
+â”œâ”€â”€ tools/
+â”œâ”€â”€ skills/
+â”œâ”€â”€ utils/
+â””â”€â”€ docs/
+    â””â”€â”€ index.html
 ```
 
 ---
