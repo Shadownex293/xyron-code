@@ -1,4 +1,7 @@
 #!/bin/bash
+# Xyron Codex — Install Script
+# Jalankan sekali: bash install.sh
+# Setelah itu ketik "xyroncodex" dari mana saja
 
 set -e
 
@@ -16,7 +19,7 @@ echo ""
 echo "  Install Script  ·  by ShadowNex"
 echo ""
 
-
+# ── Cek Python ────────────────────────────────────────────────────────────────
 PYTHON=""
 if command -v python3 &>/dev/null; then
     PYTHON=$(command -v python3)
@@ -28,7 +31,7 @@ else
 fi
 echo "  ✓  Python: $PYTHON"
 
-
+# ── Cek pip + install deps ────────────────────────────────────────────────────
 echo "  ⟳  Menginstall dependencies..."
 if [ -n "$PREFIX" ]; then
     # Termux
@@ -40,9 +43,9 @@ else
 fi
 echo "  ✓  Dependencies OK"
 
-
+# ── Tentukan BIN_DIR ──────────────────────────────────────────────────────────
 if [ -n "$PREFIX" ]; then
-
+    # Termux — $PREFIX/bin sudah di PATH
     BIN_DIR="$PREFIX/bin"
 elif [ -d "$HOME/.local/bin" ]; then
     BIN_DIR="$HOME/.local/bin"
@@ -51,7 +54,7 @@ else
     BIN_DIR="$HOME/.local/bin"
 fi
 
-
+# ── Buat wrapper "xyroncodex" ──────────────────────────────────────────────────
 WRAPPER_PATH="$BIN_DIR/xyroncodex"
 
 cat > "$WRAPPER_PATH" << WRAPPER
@@ -62,10 +65,9 @@ WRAPPER
 chmod +x "$WRAPPER_PATH"
 echo "  ✓  Command dibuat : $WRAPPER_PATH"
 
-
-
+# ── Tambah PATH kalau belum ada ───────────────────────────────────────────────
 if ! echo "$PATH" | grep -q "$BIN_DIR"; then
-
+    # Cari shell rc file
     SHELL_RC=""
     if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
         SHELL_RC="$HOME/.bashrc"

@@ -31,6 +31,7 @@ MAX_AUTO_CONTINUE = 4
 
 
 def clear_screen():
+    """Clear terminal — cross-platform (Linux/Termux/Windows)."""
     os.system("cls" if os.name == "nt" else "clear")
 
 def fuzzy_match_provider(query: str, providers: list) -> str | None:
@@ -265,7 +266,8 @@ async def handle_command(raw: str, state: dict) -> dict:
                 print_info_box("\n".join(lines).strip(), "MODULES")
 
         elif sub == "install" or (sub == "xyron" and len(args) >= 2 and args[1].lower() == "install"):
-
+            # Support: /module install xyron preview
+            # Support: /module xyron install xyron preview  (format docs)
             if sub == "xyron":
                 module_name = " ".join(args[2:]).strip()
             else:
