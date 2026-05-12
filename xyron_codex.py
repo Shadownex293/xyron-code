@@ -31,7 +31,6 @@ MAX_AUTO_CONTINUE = 4
 
 
 def clear_screen():
-    """Clear terminal — cross-platform (Linux/Termux/Windows)."""
     os.system("cls" if os.name == "nt" else "clear")
 
 def fuzzy_match_provider(query: str, providers: list) -> str | None:
@@ -125,19 +124,22 @@ async def handle_command(raw: str, state: dict) -> dict:
 
     if cmd == "help":
         lines = [
-            "/help                   Show this help",
-            "/provider <name>        Switch provider",
-            "/model [id]             Set or pick model interactively",
-            "/models                 List all available models",
-            "/skills                 Show active skills",
-            "/status                 Provider + model + token info",
-            "/roadmap                Show current task roadmap",
-            "/clear                  Clear conversation history",
-            "/save [name]            Save session",
-            "/load [name]            Load saved session",
-            "/tokens                 Token usage bar",
-            "/refresh                Refresh model catalog cache",
-            "exit                    Quit",
+            "/help                         Show this help",
+            "/provider <name>              Switch provider",
+            "/model [id]                   Set or pick model interactively",
+            "/models                       List all available models",
+            "/skills                       Show active skills",
+            "/status                       Provider + model + token info",
+            "/roadmap                      Show current task roadmap",
+            "/clear                        Clear conversation history",
+            "/save [name]                  Save session",
+            "/load [name]                  Load saved session",
+            "/tokens                       Token usage bar",
+            "/refresh                      Refresh model catalog cache",
+            "/module                       List available modules",
+            "/module install <name>        Install module",
+            "/module uninstall <name>      Uninstall module",
+            "exit                          Quit",
         ]
         print_info_box("\n".join(lines), "COMMANDS")
 
@@ -243,6 +245,57 @@ async def handle_command(raw: str, state: dict) -> dict:
         catalog = ModelCatalog()
         catalog.invalidate(state["provider"].name)
         print(C.green("  ✓  Model catalog cache cleared."))
+
+    elif cmd == "module":
+        from modules import list_modules, install_module, uninstall_module
+        sub = args[0].lower() if args else ""
+
+        if not sub or sub == "list":
+            mods = list_modules()
+            if not mods:
+                print_info_box("Belum ada modul di katalog.", "MODULES")
+            else:
+                lines = []
+                for m in mods:
+                    tag   = "✓ installed" if m["installed"] else "○ not installed"
+                    lines.append(f"  [{tag}]  {m['name']} v{m['version']}")
+                    lines.append(f"           {m['description']}")
+                    lines.append(f"           > xyron install {m['id']}")
+                    lines.append("")
+                print_info_box("\n".join(lines).strip(), "MODULES")
+
+        elif sub == "install" or (sub == "xyron" and len(args) >= 2 and args[1].lower() == "install"):
+
+            if sub == "xyron":
+                module_name = " ".join(args[2:]).strip()
+            else:
+                module_name = " ".join(args[1:]).strip()
+
+            if not module_name:
+                print_error_box("Format: /module install <nama modul>\nContoh: /module install xyron preview")
+            else:
+                ok, msg = install_module(module_name)
+                if ok:
+                    print_info_box(msg, "MODULE INSTALL")
+                else:
+                    print_error_box(msg)
+
+        elif sub == "uninstall":
+            module_name = " ".join(args[1:]).strip()
+            if not module_name:
+                print_error_box("Format: /module uninstall <nama modul>")
+            else:
+                ok, msg = uninstall_module(module_name)
+                if ok:
+                    print_info_box(msg, "MODULE UNINSTALL")
+                else:
+                    print_error_box(msg)
+
+        else:
+            print_error_box(
+                f"Sub-command tidak dikenal: '{sub}'\n"
+                "Tersedia: /module  ·  /module install <name>  ·  /module uninstall <name>"
+            )
 
     else:
         print_error_box(f"Unknown command: /{cmd}\nType /help for available commands.")

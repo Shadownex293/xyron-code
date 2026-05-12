@@ -1,7 +1,3 @@
-"""
-Setup wizard interaktif untuk Xyron Codex.
-Dipanggil saat tidak ada saved config / user belum pernah setup.
-"""
 
 import os
 import sys
@@ -103,7 +99,7 @@ PROVIDERS = [
     },
 ]
 
-# ── ANSI colors ────────────────────────────────────────────────────────────────
+
 
 def _c(code, t): return f"\033[{code}m{t}\033[0m"
 def brand(t):  return _c("38;2;167;139;250", t)
@@ -129,7 +125,6 @@ def _clear_line():
     sys.stdout.write("\r\033[K")
     sys.stdout.flush()
 
-# ── Saved config helpers ───────────────────────────────────────────────────────
 
 def load_saved_config() -> dict | None:
     try:
@@ -152,7 +147,6 @@ def delete_saved_config():
         pass
 
 
-# ── Print helpers ──────────────────────────────────────────────────────────────
 
 def _print_header():
     print()
@@ -175,7 +169,6 @@ def _print_separator():
     print("  " + dim("─" * min(w - 4, 56)))
 
 
-# ── Provider selection ─────────────────────────────────────────────────────────
 
 def _select_provider() -> dict:
     print()
@@ -198,17 +191,17 @@ def _select_provider() -> dict:
             if 1 <= n <= len(PROVIDERS):
                 return PROVIDERS[n - 1]
         except ValueError:
-            # coba cocokkan nama
+
             match = next((p for p in PROVIDERS if p["id"] == raw.lower() or p["label"].lower() == raw.lower()), None)
             if match:
                 return match
         print("  " + red("✖") + f"  Input tidak valid. Masukkan nomor 1–{len(PROVIDERS)}.")
 
 
-# ── API key input ──────────────────────────────────────────────────────────────
+
 
 def _input_api_key(provider: dict) -> str:
-    # Keyless provider — tidak butuh API key sama sekali
+
     if provider.get("keyless"):
         print()
         _print_separator()
@@ -219,7 +212,7 @@ def _input_api_key(provider: dict) -> str:
         print("  " + dim("Langsung bisa dipakai tanpa daftar apapun."))
         print("  " + dim(f"Endpoint: {provider['url']}"))
         print()
-        return ""   # empty string = keyless
+        return ""   
 
     print()
     _print_separator()
@@ -244,8 +237,6 @@ def _input_api_key(provider: dict) -> str:
             return key
         print("  " + red("✖") + "  API key terlalu pendek. Coba lagi.")
 
-
-# ── Model selection ────────────────────────────────────────────────────────────
 
 def _select_model(provider: dict) -> str:
     models = provider.get("models", [])
@@ -281,7 +272,6 @@ def _select_model(provider: dict) -> str:
         print("  " + red("✖") + f"  Pilih 1–{len(models)+1}.")
 
 
-# ── Save prompt ────────────────────────────────────────────────────────────────
 
 def _ask_save(provider: dict, api_key: str, model: str) -> bool:
     print()
@@ -311,10 +301,8 @@ def _ask_save(provider: dict, api_key: str, model: str) -> bool:
         print("  " + red("✖") + "  Ketik 1 atau 2.")
 
 
-# ── Main wizard ────────────────────────────────────────────────────────────────
 
 def run_setup_wizard() -> dict:
-    """Jalankan wizard dan return dict config siap pakai."""
     _print_header()
     _print_separator()
     print()
@@ -340,7 +328,7 @@ def run_setup_wizard() -> dict:
 
 
 def maybe_change_provider() -> dict | None:
-    """Dipanggil via /provider command — re-run wizard untuk ganti provider."""
+
     saved = load_saved_config()
 
     print()
@@ -361,20 +349,14 @@ def maybe_change_provider() -> dict | None:
     }
 
 
-# ── Key validator (dipanggil dari config.py) ───────────────────────────────────
-
 PLACEHOLDER_PATTERNS = ("...", "your_key_here", "sk-...", "gsk_...", "tvly-...")
 
-# Providers that need no key — empty string is valid for these
+
 _KEYLESS_IDS = {"copilot"}
 
 def _is_valid_key_val(val: str, provider_id: str = "") -> bool:
-    """
-    Return True jika val adalah API key yang valid.
-    Untuk keyless provider (copilot dll), empty string juga valid.
-    """
     if provider_id in _KEYLESS_IDS:
-        return True   # keyless — selalu valid
+        return True
     if not val or not val.strip():
         return False
     v = val.strip()

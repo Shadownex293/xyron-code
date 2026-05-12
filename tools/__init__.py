@@ -3,8 +3,10 @@ from .file_ops import file_tools as FILE_TOOLS, handle_file_tool
 from .shell_tool import shell_tools as SHELL_TOOLS, handle_shell_tool
 from .search_tool import search_tools as SEARCH_TOOLS, handle_search_tool
 from .web_fetch import web_fetch_tools as WEB_TOOLS, handle_web_fetch_tool
+from .preview_tool import preview_tools as PREVIEW_TOOLS, handle_preview_tool
+from .security_tool import security_tools as SECURITY_TOOLS, handle_security_tool
 
-ALL_TOOLS = [*FILE_TOOLS, *SHELL_TOOLS, *SEARCH_TOOLS, *WEB_TOOLS]
+ALL_TOOLS = [*FILE_TOOLS, *SHELL_TOOLS, *SEARCH_TOOLS, *WEB_TOOLS, *PREVIEW_TOOLS, *SECURITY_TOOLS]
 
 
 async def execute_tool(tool_call: dict, context: dict) -> str:
@@ -23,6 +25,10 @@ async def execute_tool(tool_call: dict, context: dict) -> str:
             return await handle_search_tool(args)
         if name in ("web_search", "web_fetch"):
             return await handle_web_fetch_tool(name, args)
+        if name in ("preview_scan", "preview_web"):
+            return await handle_preview_tool(name, args)
+        if name == "security_scan_url":
+            return await handle_security_tool(name, args)
         return f"Unknown tool: {name}"
     except Exception as e:
         return f"Tool execution error: {e}"

@@ -1,15 +1,11 @@
-"""
-CopilotProvider — Free AI via xyron-rest-api.vercel.app
-No API key required. History-aware (full conversation memory).
-"""
 import json
 import httpx
 from .base import BaseProvider
 
 COPILOT_BASE_URL = "https://xyron-rest-api.vercel.app/ai/copilot"
 
-_MAX_CTX_PER_MSG  = 2000   # max chars per message in history
-_MAX_HISTORY_MSGS = 30     # max recent messages to include
+_MAX_CTX_PER_MSG  = 2000
+_MAX_HISTORY_MSGS = 30
 
 
 class CopilotProvider(BaseProvider):
@@ -18,23 +14,14 @@ class CopilotProvider(BaseProvider):
         self.name               = "copilot"
         self.base_url           = COPILOT_BASE_URL
         self.supports_thinking  = False
-        self.supports_tool_calling = False  # copilot API is plain chat only
+        self.supports_tool_calling = False  
         self.default_model      = "copilot-free"
-        self.api_key            = ""       # keyless — intentionally empty
+        self.api_key            = ""
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+
 
     def _extract_text(self, content) -> str:
-        """
-        Safely extract plain text dari semua format content yang mungkin:
-          - str       -> langsung pakai
-          - None      -> ""
-          - dict      -> ambil key 'text'/'content', fallback json.dumps
-          - list      -> gabung semua elemen yang punya text
-          - lainnya   -> str()
-        """
+
         if content is None:
             return ""
         if isinstance(content, str):
@@ -58,21 +45,7 @@ class CopilotProvider(BaseProvider):
         return str(content)
 
     def _build_prompt(self, messages: list) -> str:
-        """
-        Konversi messages list (system + history + pesan baru) jadi
-        satu string untuk dikirim ke Copilot API.
 
-        Format:
-            [System]
-            <system prompt>
-
-            [Human]: ...
-            [AI]: ...
-            [Human]: <pesan terbaru>
-
-        System prompt SELALU disertakan supaya AI tidak amnesia.
-        History dibatasi _MAX_HISTORY_MSGS pesan terakhir.
-        """
         parts = []
 
         system_content = ""
@@ -88,7 +61,7 @@ class CopilotProvider(BaseProvider):
         if system_content:
             parts.append(f"[System]\n{system_content[:3000]}\n")
 
-        # Hanya ambil N pesan terakhir supaya request tidak kegedean
+
         trimmed = chat_msgs[-_MAX_HISTORY_MSGS:]
 
         for m in trimmed:
@@ -100,16 +73,14 @@ class CopilotProvider(BaseProvider):
                 parts.append(f"[Human]: {content}")
             elif role == "assistant":
                 parts.append(f"[AI]: {content}")
-            # skip role 'tool' / 'tool_result' — tidak relevan untuk copilot
+
 
         return "\n".join(parts)
 
-    # ------------------------------------------------------------------
-    # BaseProvider interface
-    # ------------------------------------------------------------------
+
 
     async def validate(self) -> bool:
-        """Ping API dengan pesan test singkat."""
+
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 r = await client.get(
@@ -129,10 +100,7 @@ class CopilotProvider(BaseProvider):
         max_tokens=8000,
         thinking="off",
     ):
-        """
-        Fetch dari Copilot API (satu response penuh, bukan SSE),
-        di-yield per chunk supaya UI terlihat streaming.
-        """
+
         prompt = self._build_prompt(messages)
 
         try:
@@ -149,7 +117,7 @@ class CopilotProvider(BaseProvider):
                     }
                     return
 
-                # Parse response — API bisa return JSON atau plain text
+
                 try:
                     data = r.json()
                     if isinstance(data, dict):
@@ -166,13 +134,13 @@ class CopilotProvider(BaseProvider):
                 except Exception:
                     text = r.text
 
-                text = self._extract_text(text)   # pastikan string
+                text = self._extract_text(text)
 
                 if not text or not text.strip():
                     yield {"type": "text", "content": "[Copilot]: (empty response)"}
                     return
 
-                # Yield per chunk untuk efek streaming
+
                 chunk_size = 40
                 for i in range(0, len(text), chunk_size):
                     yield {"type": "text", "content": text[i : i + chunk_size]}
