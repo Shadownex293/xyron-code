@@ -21,6 +21,15 @@ MODULE_CATALOG = {
         "tools":       ["security_scan_url"],
         "author":      "ShadowNex",
     },
+    "xyron github": {
+        "id":          "xyron github",
+        "name":        "Xyron GitHub",
+        "description": "Kelola GitHub langsung dari AI — buat repo, upload file/folder, buat branch, dan lainnya",
+        "version":     "1.0.0",
+        "skill_key":   "github",
+        "tools":       ["github_create_repo", "github_list_repos", "github_upload_file", "github_upload_folder", "github_delete_repo", "github_list_files", "github_create_branch", "github_whoami"],
+        "author":      "ShadowNex",
+    },
 }
 
 _STATE_FILE = Path.home() / ".xyron_codex" / "modules.json"

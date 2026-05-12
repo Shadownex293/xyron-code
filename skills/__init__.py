@@ -4,6 +4,7 @@ from .security import SECURITY_SKILL
 from .refactor import REFACTOR_SKILL
 from .preview import PREVIEW_SKILL
 from .xsecurity import XSECURITY_SKILL
+from .github import GITHUB_SKILL
 
 SKILL_REGISTRY = {
     "frontend":  FRONTEND_SKILL,
@@ -12,6 +13,7 @@ SKILL_REGISTRY = {
     "refactor":  REFACTOR_SKILL,
     "preview":   PREVIEW_SKILL,
     "xsecurity": XSECURITY_SKILL,
+    "github":    GITHUB_SKILL,
 }
 
 

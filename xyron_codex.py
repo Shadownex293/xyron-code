@@ -137,6 +137,9 @@ async def handle_command(raw: str, state: dict) -> dict:
             "/load [name]                  Load saved session",
             "/tokens                       Token usage bar",
             "/refresh                      Refresh model catalog cache",
+            "/github token <TOKEN>             Set GitHub Personal Access Token",
+            "/github whoami                    Cek akun GitHub aktif",
+            "/github logout                    Hapus GitHub token",
             "/module                       List available modules",
             "/module install <name>        Install module",
             "/module uninstall <name>      Uninstall module",
@@ -246,6 +249,52 @@ async def handle_command(raw: str, state: dict) -> dict:
         catalog = ModelCatalog()
         catalog.invalidate(state["provider"].name)
         print(C.green("  ✓  Model catalog cache cleared."))
+
+    elif cmd == "github":
+        from pathlib import Path
+        import json as _json
+        sub       = args[0].lower() if args else ""
+        gh_config = Path.home() / ".xyron_codex" / "github.json"
+
+        if sub == "token":
+            token_val = args[1] if len(args) > 1 else ""
+            if not token_val:
+                print_error_box("Format: /github token <YOUR_GITHUB_PAT>")
+            else:
+                gh_config.parent.mkdir(parents=True, exist_ok=True)
+                gh_config.write_text(_json.dumps({"token": token_val}, indent=2))
+                print_info_box(
+                    "✓ GitHub token berhasil disimpan!\n"
+                    "  Sekarang lo bisa pakai perintah seperti:\n"
+                    "    buat repo baru\n"
+                    "    upload folder project ini ke github\n"
+                    "    lihat semua repo gua",
+                    "GITHUB"
+                )
+
+        elif sub == "logout":
+            if gh_config.exists():
+                gh_config.unlink()
+                print_info_box("✓ GitHub token dihapus.", "GITHUB")
+            else:
+                print_error_box("Belum ada token yang tersimpan.")
+
+        elif sub == "whoami":
+            import asyncio
+            from tools.github_tool import handle_github_tool as _gh
+            result = asyncio.get_event_loop().run_until_complete(_gh("github_whoami", {}))
+            print_info_box(result, "GITHUB")
+
+        else:
+            print_info_box(
+                "Perintah GitHub yang tersedia:\n"
+                "  /github token <TOKEN>  → simpan GitHub PAT\n"
+                "  /github whoami         → cek akun yang login\n"
+                "  /github logout         → hapus token\n\n"
+                "Generate token di: https://github.com/settings/tokens\n"
+                "Scope yang dibutuhkan: repo, delete_repo",
+                "GITHUB"
+            )
 
     elif cmd == "module":
         from modules import list_modules, install_module, uninstall_module
