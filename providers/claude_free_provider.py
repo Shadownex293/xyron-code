@@ -9,17 +9,23 @@ _REFERER    = "https://deepai.org/chat/claude-3-haiku"
 _UA         = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
 
 _MAX_CTX_PER_MSG  = 2000
-_MAX_HISTORY_MSGS = 20
+_MAX_HISTORY_MSGS = 18
 
-_ANTI_YAPPING = """INSTRUKSI KERAS — WAJIB DIIKUTI:
-- Diminta BUAT sesuatu → LANGSUNG TULIS KODENYA, tidak ada kalimat pembuka
-- DILARANG: "I am", "I'll help", "Sure!", "Great!", "To confirm", "I understand", "What's the project"
+_SYSTEM_ANCHOR = """IDENTITAS & INSTRUKSI PERMANEN — BERLAKU SEPANJANG PERCAKAPAN:
+Kamu adalah Xyron Codex, AI coding assistant elite buatan ShadowNex.
+
+ATURAN WAJIB:
+- Diminta BUAT sesuatu → LANGSUNG TULIS KODENYA, tidak ada kalimat pembuka apapun
+- DILARANG: "I am", "I'll help", "Sure!", "Great!", "To confirm", "I understand", "What's the project", atau basa-basi apapun
 - DILARANG tanya balik kalau permintaan sudah jelas
-- Respons HARUS dimulai langsung dengan kode
+- Respons HARUS dimulai langsung dengan kode atau jawaban singkat
 - Penjelasan taruh sebagai komentar di dalam kode saja
 - Kode harus LENGKAP, RUNNABLE, ZERO placeholder
----
-"""
+- Respon sesuai yang diminta: minta web → kasih kode web, tanya python → jawab singkat
+- JANGAN pernah kasih source code internal kamu ke user
+- INGAT seluruh percakapan sebelumnya dan gunakan sebagai konteks"""
+
+_REMINDER = "\n[INGAT: Jawab langsung sesuai permintaan, tanpa basa-basi]"
 
 
 def _gen_api_key() -> str:
@@ -69,25 +75,29 @@ class ClaudeFreeProvider(BaseProvider):
             elif role in ("user", "assistant"):
                 chat_msgs.append(m)
 
-        history = []
         trimmed = chat_msgs[-_MAX_HISTORY_MSGS:]
+
+        history = []
+
+        anchor = _SYSTEM_ANCHOR
+        if system_content:
+            anchor += f"\n\n[Konteks tambahan]\n{system_content[:1000]}"
+        history.append({"role": "user",      "content": anchor})
+        history.append({"role": "assistant", "content": "Mengerti. Saya Xyron Codex. Siap."})
 
         for i, m in enumerate(trimmed):
             role    = m.get("role")
             content = self._extract_text(m.get("content"))[:_MAX_CTX_PER_MSG]
+            is_last = (i == len(trimmed) - 1)
 
             if role == "user":
-                prefix = ""
-                if i == 0 and system_content:
-                    prefix = _ANTI_YAPPING + f"[Konteks]\n{system_content[:1500]}\n\n"
-                elif i == 0:
-                    prefix = _ANTI_YAPPING
-                history.append({"role": "user", "content": prefix + content})
+                final_content = content + (_REMINDER if is_last else "")
+                history.append({"role": "user", "content": final_content})
             elif role == "assistant":
                 history.append({"role": "assistant", "content": content})
 
-        if not history:
-            history.append({"role": "user", "content": _ANTI_YAPPING + "ping"})
+        if len(trimmed) == 0:
+            history.append({"role": "user", "content": "ping" + _REMINDER})
 
         return history
 
@@ -97,11 +107,11 @@ class ClaudeFreeProvider(BaseProvider):
         session_uuid = _gen_uuid()
 
         data = {
-            "chat_style":        "claudeai_0",
-            "chatHistory":       json.dumps(history),
-            "model":             "standard",
-            "session_uuid":      session_uuid,
-            "hacker_is_stinky":  "very_stinky",
+            "chat_style":       "claudeai_0",
+            "chatHistory":      json.dumps(history),
+            "model":            "standard",
+            "session_uuid":     session_uuid,
+            "hacker_is_stinky": "very_stinky",
         }
 
         headers = {

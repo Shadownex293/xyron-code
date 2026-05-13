@@ -14,7 +14,7 @@ class _OpenAICompatProvider(BaseProvider):
                 headers=self._headers(),
                 timeout=10,
             )
-            if r.status_code not in (200, 404):
+            if r.status_code != 200:
                 raise ValueError(f"Auth failed for {self.name}: {r.status_code}")
             return True
 
@@ -37,7 +37,7 @@ class _OpenAICompatProvider(BaseProvider):
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
 
-        tool_buffer = {}
+        tool_buffer  = {}
         full_content = ""
 
         async with httpx.AsyncClient() as client:
@@ -92,17 +92,13 @@ class _OpenAICompatProvider(BaseProvider):
             return [{"id": m, "owned_by": self.name, "context_window": None} for m in self.get_recommended_models()]
 
 
-
 class GeminiProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "gemini"
-        self.base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
+        self.name              = "gemini"
+        self.base_url          = "https://generativelanguage.googleapis.com/v1beta/openai"
         self.supports_tool_calling = True
-        self.default_model = "gemini-2.5-flash"
-
-    def _headers(self):
-        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        self.default_model     = "gemini-2.5-flash"
 
     def get_recommended_models(self):
         return ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"]
@@ -111,14 +107,13 @@ class GeminiProvider(_OpenAICompatProvider):
         return "\n## GEMINI\nGoogle AI. 1M context. Free: 1500 req/day."
 
 
-
 class NvidiaProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "nvidia"
-        self.base_url = "https://integrate.api.nvidia.com/v1"
+        self.name              = "nvidia"
+        self.base_url          = "https://integrate.api.nvidia.com/v1"
         self.supports_tool_calling = True
-        self.default_model = "meta/llama-3.3-70b-instruct"
+        self.default_model     = "meta/llama-3.3-70b-instruct"
 
     def get_recommended_models(self):
         return [
@@ -132,14 +127,13 @@ class NvidiaProvider(_OpenAICompatProvider):
         return "\n## NVIDIA NIM\nNIM serverless inference. Free credits on build.nvidia.com."
 
 
-
 class CerebrasProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "cerebras"
-        self.base_url = "https://api.cerebras.ai/v1"
+        self.name              = "cerebras"
+        self.base_url          = "https://api.cerebras.ai/v1"
         self.supports_tool_calling = True
-        self.default_model = "llama-3.3-70b"
+        self.default_model     = "llama-3.3-70b"
 
     def get_recommended_models(self):
         return ["llama-3.3-70b", "llama-3.1-8b", "qwen-3-32b"]
@@ -148,14 +142,13 @@ class CerebrasProvider(_OpenAICompatProvider):
         return "\n## CEREBRAS\nWSE inference. 1M tokens/day free. Ultra-fast."
 
 
-
 class MistralProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "mistral"
-        self.base_url = "https://api.mistral.ai/v1"
+        self.name              = "mistral"
+        self.base_url          = "https://api.mistral.ai/v1"
         self.supports_tool_calling = True
-        self.default_model = "mistral-large-latest"
+        self.default_model     = "mistral-large-latest"
 
     def get_recommended_models(self):
         return ["mistral-large-latest", "devstral-latest", "codestral-latest", "mistral-small-latest"]
@@ -164,14 +157,13 @@ class MistralProvider(_OpenAICompatProvider):
         return "\n## MISTRAL\n1B tokens/month free. Codestral best for code."
 
 
-
 class XAIProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "xai"
-        self.base_url = "https://api.x.ai/v1"
+        self.name              = "xai"
+        self.base_url          = "https://api.x.ai/v1"
         self.supports_tool_calling = True
-        self.default_model = "grok-3-mini"
+        self.default_model     = "grok-3-mini"
 
     def get_recommended_models(self):
         return ["grok-3-mini", "grok-3", "grok-3-mini-fast"]
@@ -180,14 +172,13 @@ class XAIProvider(_OpenAICompatProvider):
         return "\n## XAI\nGrok models. $25 signup credits."
 
 
-
 class SambanovaProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "sambanova"
-        self.base_url = "https://api.sambanova.ai/v1"
+        self.name              = "sambanova"
+        self.base_url          = "https://api.sambanova.ai/v1"
         self.supports_tool_calling = True
-        self.default_model = "Meta-Llama-3.3-70B-Instruct"
+        self.default_model     = "Meta-Llama-3.3-70B-Instruct"
 
     def get_recommended_models(self):
         return ["Meta-Llama-3.3-70B-Instruct", "Meta-Llama-3.1-405B-Instruct", "DeepSeek-R1-Distill-Llama-70B"]
@@ -196,14 +187,13 @@ class SambanovaProvider(_OpenAICompatProvider):
         return "\n## SAMBANOVA\nRDU hardware. Fast free tier."
 
 
-
 class TogetherProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "together"
-        self.base_url = "https://api.together.xyz/v1"
+        self.name              = "together"
+        self.base_url          = "https://api.together.xyz/v1"
         self.supports_tool_calling = True
-        self.default_model = "meta-llama/Meta-Llama-3.3-70B-Instruct-Turbo"
+        self.default_model     = "meta-llama/Meta-Llama-3.3-70B-Instruct-Turbo"
 
     def get_recommended_models(self):
         return [
@@ -216,14 +206,13 @@ class TogetherProvider(_OpenAICompatProvider):
         return "\n## TOGETHER\n~$100 signup credits. Largest OSS model catalog."
 
 
-
 class KimiProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "kimi"
-        self.base_url = "https://api.moonshot.ai/v1"
+        self.name              = "kimi"
+        self.base_url          = "https://api.moonshot.ai/v1"
         self.supports_tool_calling = True
-        self.default_model = "kimi-k2-0711-preview"
+        self.default_model     = "kimi-k2-0711-preview"
 
     def get_recommended_models(self):
         return ["kimi-k2-0711-preview", "moonshot-v1-128k", "moonshot-v1-8k"]
@@ -232,15 +221,14 @@ class KimiProvider(_OpenAICompatProvider):
         return "\n## KIMI\nMoonshot AI. Trial credits available."
 
 
-
 class QwenProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "qwen"
-        region = config.get("qwen_region", "sg")
-        self.base_url = f"https://dashscope-intl.aliyuncs.com/compatible-mode/v1" if region != "cn" else "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        self.name              = "qwen"
+        region                 = config.get("qwen_region", "sg")
+        self.base_url          = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1" if region != "cn" else "https://dashscope.aliyuncs.com/compatible-mode/v1"
         self.supports_tool_calling = True
-        self.default_model = "qwen3-235b-a22b"
+        self.default_model     = "qwen3-235b-a22b"
 
     def get_recommended_models(self):
         return ["qwen3-235b-a22b", "qwen3-72b", "qwen-coder-plus-latest"]
@@ -249,14 +237,13 @@ class QwenProvider(_OpenAICompatProvider):
         return "\n## QWEN\nAlibaba DashScope. Trial credits."
 
 
-
 class MinimaxProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "minimax"
-        self.base_url = "https://api.minimax.chat/v1"
+        self.name              = "minimax"
+        self.base_url          = "https://api.minimax.chat/v1"
         self.supports_tool_calling = True
-        self.default_model = "MiniMax-Text-01"
+        self.default_model     = "MiniMax-Text-01"
 
     def get_recommended_models(self):
         return ["MiniMax-Text-01", "MiniMax-M1"]
@@ -265,14 +252,13 @@ class MinimaxProvider(_OpenAICompatProvider):
         return "\n## MINIMAX\nMiniMax AI. Trial credits."
 
 
-
 class DeepSeekProvider(_OpenAICompatProvider):
     def __init__(self, config):
         super().__init__(config)
-        self.name = "deepseek"
-        self.base_url = "https://api.deepseek.com/v1"
+        self.name              = "deepseek"
+        self.base_url          = "https://api.deepseek.com/v1"
         self.supports_tool_calling = True
-        self.default_model = "deepseek-chat"
+        self.default_model     = "deepseek-chat"
 
     def get_recommended_models(self):
         return ["deepseek-chat", "deepseek-reasoner"]

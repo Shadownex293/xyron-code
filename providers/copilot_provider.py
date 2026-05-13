@@ -1,50 +1,44 @@
-"""
-CopilotProvider — Free AI via xyron-rest-api.vercel.app
-No API key required. History-aware (full conversation memory).
-"""
 import json
 import httpx
 from .base import BaseProvider
 
 COPILOT_BASE_URL = "https://xyron-rest-api.vercel.app/ai/copilot"
 
-_MAX_CTX_PER_MSG  = 2000   # max chars per message in history
-_MAX_HISTORY_MSGS = 30     # max recent messages to include
+_MAX_CTX_PER_MSG  = 2000
+_MAX_HISTORY_MSGS = 30
+
+_SYSTEM_ANCHOR = """IDENTITAS & INSTRUKSI PERMANEN — BERLAKU SEPANJANG PERCAKAPAN:
+Kamu adalah Xyron Codex, AI coding assistant elite buatan ShadowNex.
+
+ATURAN WAJIB:
+- Diminta BUAT sesuatu → LANGSUNG TULIS KODENYA, tidak ada kalimat pembuka apapun
+- DILARANG: "I am", "I'll help", "Sure!", "Great!", "To confirm", "I understand"
+- DILARANG tanya balik kalau permintaan sudah jelas
+- Respons HARUS dimulai langsung dengan kode atau jawaban singkat
+- Penjelasan taruh sebagai komentar di dalam kode saja
+- Kode harus LENGKAP, RUNNABLE, ZERO placeholder
+- INGAT seluruh percakapan sebelumnya dan gunakan sebagai konteks"""
+
+_REMINDER = "\n[INGAT: Jawab langsung sesuai permintaan, tanpa basa-basi]"
 
 
 class CopilotProvider(BaseProvider):
     def __init__(self, config: dict):
         super().__init__(config)
-        self.name               = "copilot"
-        self.base_url           = COPILOT_BASE_URL
-        self.supports_thinking  = False
-        self.supports_tool_calling = False  # copilot API is plain chat only
-        self.default_model      = "copilot-free"
-        self.api_key            = ""       # keyless — intentionally empty
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+        self.name                  = "copilot"
+        self.base_url              = COPILOT_BASE_URL
+        self.supports_thinking     = False
+        self.supports_tool_calling = False
+        self.default_model         = "copilot-free"
+        self.api_key               = ""
 
     def _extract_text(self, content) -> str:
-        """
-        Safely extract plain text dari semua format content yang mungkin:
-          - str       -> langsung pakai
-          - None      -> ""
-          - dict      -> ambil key 'text'/'content', fallback json.dumps
-          - list      -> gabung semua elemen yang punya text
-          - lainnya   -> str()
-        """
         if content is None:
             return ""
         if isinstance(content, str):
             return content
         if isinstance(content, dict):
-            return (
-                content.get("text")
-                or content.get("content")
-                or json.dumps(content)
-            )
+            return content.get("text") or content.get("content") or json.dumps(content)
         if isinstance(content, list):
             parts = []
             for item in content:
@@ -58,23 +52,6 @@ class CopilotProvider(BaseProvider):
         return str(content)
 
     def _build_prompt(self, messages: list) -> str:
-        """
-        Konversi messages list (system + history + pesan baru) jadi
-        satu string untuk dikirim ke Copilot API.
-
-        Format:
-            [System]
-            <system prompt>
-
-            [Human]: ...
-            [AI]: ...
-            [Human]: <pesan terbaru>
-
-        System prompt SELALU disertakan supaya AI tidak amnesia.
-        History dibatasi _MAX_HISTORY_MSGS pesan terakhir.
-        """
-        parts = []
-
         system_content = ""
         chat_msgs      = []
 
@@ -82,74 +59,43 @@ class CopilotProvider(BaseProvider):
             role = m.get("role", "")
             if role == "system":
                 system_content = self._extract_text(m.get("content"))
-            else:
+            elif role in ("user", "assistant"):
                 chat_msgs.append(m)
 
-        if system_content:
-            parts.append(f"[System]\n{system_content[:3000]}\n")
-
-        # Hanya ambil N pesan terakhir supaya request tidak kegedean
+        parts   = [_SYSTEM_ANCHOR]
         trimmed = chat_msgs[-_MAX_HISTORY_MSGS:]
 
-        for m in trimmed:
+        if system_content:
+            parts.append(f"[Konteks]\n{system_content[:1500]}\n")
+
+        for i, m in enumerate(trimmed):
             role    = m.get("role", "")
-            content = self._extract_text(m.get("content"))
-            content = content[:_MAX_CTX_PER_MSG]
+            content = self._extract_text(m.get("content"))[:_MAX_CTX_PER_MSG]
+            is_last = (i == len(trimmed) - 1)
 
             if role == "user":
-                parts.append(f"[Human]: {content}")
+                parts.append(f"[Human]: {content}{_REMINDER if is_last else ''}")
             elif role == "assistant":
                 parts.append(f"[AI]: {content}")
-            # skip role 'tool' / 'tool_result' — tidak relevan untuk copilot
 
         return "\n".join(parts)
 
-    # ------------------------------------------------------------------
-    # BaseProvider interface
-    # ------------------------------------------------------------------
-
     async def validate(self) -> bool:
-        """Ping API dengan pesan test singkat."""
         try:
             async with httpx.AsyncClient(timeout=15) as client:
-                r = await client.get(
-                    COPILOT_BASE_URL,
-                    params={"message": "ping"},
-                )
+                r = await client.get(COPILOT_BASE_URL, params={"message": "ping"})
                 return r.status_code < 500
         except Exception as e:
             raise ValueError(f"Copilot API unreachable: {e}")
 
-    async def stream(
-        self,
-        messages,
-        tools=None,
-        model=None,
-        temperature=0.7,
-        max_tokens=8000,
-        thinking="off",
-    ):
-        """
-        Fetch dari Copilot API (satu response penuh, bukan SSE),
-        di-yield per chunk supaya UI terlihat streaming.
-        """
+    async def stream(self, messages, tools=None, model=None, temperature=0.7, max_tokens=8000, thinking="off"):
         prompt = self._build_prompt(messages)
-
         try:
             async with httpx.AsyncClient(timeout=60) as client:
-                r = await client.get(
-                    COPILOT_BASE_URL,
-                    params={"message": prompt},
-                )
-
+                r = await client.get(COPILOT_BASE_URL, params={"message": prompt})
                 if r.status_code != 200:
-                    yield {
-                        "type":    "text",
-                        "content": f"\n[Copilot Error {r.status_code}]: {r.text[:300]}",
-                    }
+                    yield {"type": "text", "content": f"\n[Copilot Error {r.status_code}]: {r.text[:300]}"}
                     return
-
-                # Parse response — API bisa return JSON atau plain text
                 try:
                     data = r.json()
                     if isinstance(data, dict):
@@ -166,22 +112,17 @@ class CopilotProvider(BaseProvider):
                 except Exception:
                     text = r.text
 
-                text = self._extract_text(text)   # pastikan string
-
+                text = self._extract_text(text)
                 if not text or not text.strip():
                     yield {"type": "text", "content": "[Copilot]: (empty response)"}
                     return
 
-                # Yield per chunk untuk efek streaming
                 chunk_size = 40
                 for i in range(0, len(text), chunk_size):
-                    yield {"type": "text", "content": text[i : i + chunk_size]}
+                    yield {"type": "text", "content": text[i: i + chunk_size]}
 
         except httpx.TimeoutException:
-            yield {
-                "type":    "text",
-                "content": "\n[Copilot Error]: Request timeout (60s). Coba lagi.",
-            }
+            yield {"type": "text", "content": "\n[Copilot Error]: Timeout 60s. Coba lagi."}
         except Exception as e:
             yield {"type": "text", "content": f"\n[Copilot Error]: {e}"}
 
@@ -194,6 +135,5 @@ class CopilotProvider(BaseProvider):
     def get_system_prompt_appendix(self) -> str:
         return (
             "\n## COPILOT (FREE)\n"
-            "Provider gratis via xyron-rest-api.vercel.app. "
-            "Tidak butuh API key. History percakapan tetap terjaga."
+            "Provider gratis via xyron-rest-api.vercel.app. Tidak butuh API key."
         )
