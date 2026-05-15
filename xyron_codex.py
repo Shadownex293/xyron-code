@@ -16,6 +16,8 @@ from utils.model_catalog import ModelCatalog
 from utils.context_manager import ContextManager
 from utils.retry import is_retryable_error
 from utils.system_prompt import build_system_prompt
+from utils.git_utils import is_git_repo, git_add_commit, git_log, git_status
+from utils.diff_utils import make_diff, print_diff, confirm_apply
 from utils.ui import (
     C, get_width, print_banner, print_user_box, print_ai_header,
     print_ai_footer, print_ai_footer_line, print_error_box, print_info_box,
@@ -31,8 +33,8 @@ MAX_AUTO_CONTINUE = 4
 
 
 def clear_screen():
-    """Clear terminal — cross-platform (Linux/Termux/Windows)."""
     os.system("cls" if os.name == "nt" else "clear")
+
 
 def fuzzy_match_provider(query: str, providers: list) -> str | None:
     q = query.lower().replace(" ", "")
@@ -43,20 +45,26 @@ def fuzzy_match_provider(query: str, providers: list) -> str | None:
     if prefix:
         return prefix
     contains = next((p for p in providers if q in p.lower()), None)
-    if contains:
-        return contains
-    return None
+    return contains
+
+
+def resolve_path(path: str, cwd: str) -> str:
+    if path.startswith("~"):
+        path = os.path.expanduser(path)
+    if not os.path.isabs(path):
+        path = os.path.join(cwd, path)
+    return os.path.normpath(path)
 
 
 async def stream_with_auto_continue(provider, base_params: dict, state_ref: dict | None):
     auto_continues = 0
     current_params = {**base_params, "messages": list(base_params["messages"])}
-    accumulated = ""
+    accumulated    = ""
 
     while True:
-        partial = ""
+        partial    = ""
         tool_calls = None
-        err = None
+        err        = None
 
         try:
             async for chunk in provider.stream(**current_params):
@@ -71,7 +79,7 @@ async def stream_with_auto_continue(provider, base_params: dict, state_ref: dict
                     sys.stdout.flush()
                 elif chunk["type"] == "tool_calls":
                     tool_calls = chunk["content"]
-                    partial = chunk.get("full_content", partial)
+                    partial    = chunk.get("full_content", partial)
 
             stream_flush()
             print_ai_footer_line()
@@ -89,7 +97,7 @@ async def stream_with_auto_continue(provider, base_params: dict, state_ref: dict
             print_ai_footer_line()
             accumulated += partial
 
-        retryable = is_retryable_error(err)
+        retryable   = is_retryable_error(err)
         has_content = len(accumulated.strip()) > 30
 
         if not retryable or auto_continues >= MAX_AUTO_CONTINUE:
@@ -100,14 +108,14 @@ async def stream_with_auto_continue(provider, base_params: dict, state_ref: dict
 
         if has_content:
             print_auto_continue_badge(auto_continues, MAX_AUTO_CONTINUE)
-            roadmap = (state_ref or {}).get("roadmap") or parse_roadmap(accumulated)
+            roadmap      = (state_ref or {}).get("roadmap") or parse_roadmap(accumulated)
             continue_msg = build_roadmap_continue_prompt(roadmap) if roadmap else "Please continue."
             current_params = {
                 **base_params,
                 "messages": [
                     *current_params["messages"],
                     {"role": "assistant", "content": accumulated},
-                    {"role": "user", "content": continue_msg},
+                    {"role": "user",      "content": continue_msg},
                 ],
             }
             print_ai_header(provider.name, current_params.get("model", provider.default_model))
@@ -115,7 +123,6 @@ async def stream_with_auto_continue(provider, base_params: dict, state_ref: dict
             delay_ms = 1500 * auto_continues
             print_retry_badge(auto_continues, MAX_AUTO_CONTINUE, delay_ms)
             await asyncio.sleep(delay_ms / 1000)
-
 
 
 async def handle_command(raw: str, state: dict) -> dict:
@@ -133,19 +140,95 @@ async def handle_command(raw: str, state: dict) -> dict:
             "/status                       Provider + model + token info",
             "/roadmap                      Show current task roadmap",
             "/clear                        Clear conversation history",
+            "/compact                      Compress history jadi ringkasan",
             "/save [name]                  Save session",
             "/load [name]                  Load saved session",
             "/tokens                       Token usage bar",
             "/refresh                      Refresh model catalog cache",
-            "/github token <TOKEN>             Set GitHub Personal Access Token",
-            "/github whoami                    Cek akun GitHub aktif",
-            "/github logout                    Hapus GitHub token",
+            "/automode [on/off]            Toggle auto-approve semua tool calls",
+            "/git                          Status git repo",
+            "/git log                      Lihat commit terakhir",
+            "/cd <path>                    Pindah ke folder manapun",
+            "/pwd                          Lihat folder aktif sekarang",
+            "/github token <TOKEN>         Set GitHub PAT",
+            "/github whoami                Cek akun GitHub aktif",
+            "/github logout                Hapus GitHub token",
             "/module                       List available modules",
             "/module install <name>        Install module",
             "/module uninstall <name>      Uninstall module",
             "exit                          Quit",
         ]
         print_info_box("\n".join(lines), "COMMANDS")
+
+    elif cmd == "automode":
+        sub = args[0].lower() if args else ""
+        if sub == "on":
+            state["automode"] = True
+            print_info_box("⚡ AUTOMODE ON — semua tool call langsung dieksekusi tanpa konfirmasi", "AUTOMODE")
+        elif sub == "off":
+            state["automode"] = False
+            print_info_box("🔒 AUTOMODE OFF — diff view + konfirmasi aktif sebelum apply perubahan", "AUTOMODE")
+        else:
+            status = "ON ⚡" if state.get("automode") else "OFF 🔒"
+            print_info_box(f"Automode saat ini: {status}\nGunakan /automode on atau /automode off", "AUTOMODE")
+
+    elif cmd == "cd":
+        if not args:
+            target = os.path.expanduser("~")
+        else:
+            target = resolve_path(" ".join(args), state["cwd"])
+
+        if not os.path.exists(target):
+            print_error_box(f"Folder tidak ditemukan: {target}")
+        elif not os.path.isdir(target):
+            print_error_box(f"Bukan folder: {target}")
+        else:
+            state["cwd"] = target
+            os.chdir(target)
+            is_git = is_git_repo(target)
+            git_badge = C.green("  git✓") if is_git else ""
+            print(C.green(f"  ✓  {target}{git_badge}"))
+
+    elif cmd == "pwd":
+        print(C.white(f"  {state['cwd']}"))
+
+    elif cmd == "git":
+        sub = args[0].lower() if args else "status"
+        if not is_git_repo(state["cwd"]):
+            print_error_box(f"Bukan git repo: {state['cwd']}")
+        elif sub == "log":
+            log = git_log(state["cwd"])
+            print_info_box(log or "(no commits)", "GIT LOG")
+        else:
+            status = git_status(state["cwd"])
+            print_info_box(status or "✓ Working tree clean", "GIT STATUS")
+
+    elif cmd == "compact":
+        if len(state["history"]) < 4:
+            print_error_box("History terlalu pendek untuk di-compact.")
+        else:
+            sp = create_spinner("thinking")
+            summary_messages = [
+                {"role": "system",  "content": "Kamu adalah summarizer. Buat ringkasan SANGAT SINGKAT dari percakapan ini dalam bahasa Indonesia. Maksimal 200 kata. Fokus pada: apa yang diminta, apa yang sudah dibuat, file apa yang ada. Format bullet point."},
+                *state["history"],
+                {"role": "user",    "content": "Buat ringkasan singkat percakapan ini."},
+            ]
+            try:
+                full = ""
+                async for chunk in state["provider"].stream(messages=summary_messages, model=state["model"], max_tokens=500):
+                    if chunk["type"] == "text":
+                        full += chunk["content"]
+                sp.stop()
+                state["history"] = [
+                    {"role": "user",      "content": "[RINGKASAN SESI SEBELUMNYA]\n" + full},
+                    {"role": "assistant", "content": "Mengerti. Saya ingat konteks tersebut."},
+                ]
+                SessionManager("default").save(state["history"])
+                msg_count = len(state["history"])
+                print_info_box(f"✓ History dicompact jadi {msg_count} pesan.\n\n{full}", "COMPACT")
+            except Exception as e:
+                sp.stop()
+                print_error_box(f"Compact gagal: {e}")
 
     elif cmd == "provider":
         from utils.setup import maybe_change_provider
@@ -199,13 +282,16 @@ async def handle_command(raw: str, state: dict) -> dict:
         est = estimate_tokens(json.dumps(state["history"]))
         pct = f"{(est / cfg['max_context_tokens']) * 100:.1f}"
         bar = build_token_bar(est, cfg["max_context_tokens"], 24)
+        auto = "⚡ ON" if state.get("automode") else "🔒 OFF"
         lines = [
             f"Provider    {state['provider'].name.upper()}",
             f"Model       {state['model']}",
             f"Thinking    {state['thinking']}",
+            f"Automode    {auto}",
+            f"CWD         {state['cwd']}",
+            f"Git         {'✓ repo' if is_git_repo(state['cwd']) else '✗ not a repo'}",
             f"History     {len(state['history'])} messages",
             f"Tokens      {bar}  {est}/{cfg['max_context_tokens']}  ({pct}%)",
-            f"Roadmap     {state['roadmap']['steps'][0]['label'] if state.get('roadmap') else 'none'}",
         ]
         print_info_box("\n".join(lines), "STATUS")
 
@@ -217,7 +303,7 @@ async def handle_command(raw: str, state: dict) -> dict:
 
     elif cmd == "roadmap":
         if not state.get("roadmap"):
-            print_info_box("No roadmap in current session. Start a complex task to generate one.", "ROADMAP")
+            print_info_box("No roadmap in current session.", "ROADMAP")
         else:
             print_roadmap_status(state["roadmap"])
 
@@ -263,36 +349,24 @@ async def handle_command(raw: str, state: dict) -> dict:
             else:
                 gh_config.parent.mkdir(parents=True, exist_ok=True)
                 gh_config.write_text(_json.dumps({"token": token_val}, indent=2))
-                print_info_box(
-                    "✓ GitHub token berhasil disimpan!\n"
-                    "  Sekarang lo bisa pakai perintah seperti:\n"
-                    "    buat repo baru\n"
-                    "    upload folder project ini ke github\n"
-                    "    lihat semua repo gua",
-                    "GITHUB"
-                )
-
+                print_info_box("✓ GitHub token berhasil disimpan!", "GITHUB")
         elif sub == "logout":
             if gh_config.exists():
                 gh_config.unlink()
                 print_info_box("✓ GitHub token dihapus.", "GITHUB")
             else:
                 print_error_box("Belum ada token yang tersimpan.")
-
         elif sub == "whoami":
-            import asyncio
             from tools.github_tool import handle_github_tool as _gh
-            result = asyncio.get_event_loop().run_until_complete(_gh("github_whoami", {}))
+            result = await _gh("github_whoami", {})
             print_info_box(result, "GITHUB")
-
         else:
             print_info_box(
-                "Perintah GitHub yang tersedia:\n"
-                "  /github token <TOKEN>  → simpan GitHub PAT\n"
-                "  /github whoami         → cek akun yang login\n"
-                "  /github logout         → hapus token\n\n"
-                "Generate token di: https://github.com/settings/tokens\n"
-                "Scope yang dibutuhkan: repo, delete_repo",
+                "/github token <TOKEN>  → simpan GitHub PAT\n"
+                "/github whoami         → cek akun yang login\n"
+                "/github logout         → hapus token\n\n"
+                "Generate token: https://github.com/settings/tokens\n"
+                "Scope: repo, delete_repo",
                 "GITHUB"
             )
 
@@ -307,23 +381,17 @@ async def handle_command(raw: str, state: dict) -> dict:
             else:
                 lines = []
                 for m in mods:
-                    tag   = "✓ installed" if m["installed"] else "○ not installed"
+                    tag = "✓ installed" if m["installed"] else "○ not installed"
                     lines.append(f"  [{tag}]  {m['name']} v{m['version']}")
                     lines.append(f"           {m['description']}")
-                    lines.append(f"           > xyron install {m['id']}")
+                    lines.append(f"           > /module install {m['id']}")
                     lines.append("")
                 print_info_box("\n".join(lines).strip(), "MODULES")
 
         elif sub == "install" or (sub == "xyron" and len(args) >= 2 and args[1].lower() == "install"):
-            # Support: /module install xyron preview
-            # Support: /module xyron install xyron preview  (format docs)
-            if sub == "xyron":
-                module_name = " ".join(args[2:]).strip()
-            else:
-                module_name = " ".join(args[1:]).strip()
-
+            module_name = " ".join(args[2:] if sub == "xyron" else args[1:]).strip()
             if not module_name:
-                print_error_box("Format: /module install <nama modul>\nContoh: /module install xyron preview")
+                print_error_box("Format: /module install <nama modul>")
             else:
                 ok, msg = install_module(module_name)
                 if ok:
@@ -341,18 +409,75 @@ async def handle_command(raw: str, state: dict) -> dict:
                     print_info_box(msg, "MODULE UNINSTALL")
                 else:
                     print_error_box(msg)
-
         else:
-            print_error_box(
-                f"Sub-command tidak dikenal: '{sub}'\n"
-                "Tersedia: /module  ·  /module install <name>  ·  /module uninstall <name>"
-            )
+            print_error_box(f"Sub-command tidak dikenal: '{sub}'")
 
     else:
         print_error_box(f"Unknown command: /{cmd}\nType /help for available commands.")
 
     return state
 
+
+async def handle_tool_with_features(tc, state, messages):
+    tool_name = tc["function"].get("name", "")
+    try:
+        tool_args = json.loads(tc["function"].get("arguments", "{}"))
+    except Exception:
+        tool_args = {}
+
+    cwd      = state["cwd"]
+    automode = state.get("automode", False)
+
+    if tool_name == "write_file":
+        filepath = tool_args.get("path", "")
+        new_content = tool_args.get("content", "")
+
+        if filepath and not os.path.isabs(filepath):
+            filepath = os.path.join(cwd, filepath)
+
+        if os.path.exists(filepath):
+            try:
+                old_content = open(filepath, encoding="utf-8", errors="replace").read()
+            except Exception:
+                old_content = ""
+
+            if old_content != new_content:
+                diff = make_diff(old_content, new_content, os.path.basename(filepath))
+                print(f"\n  \033[36m── DIFF: {os.path.basename(filepath)} ──\033[0m")
+                print_diff(diff)
+
+                if not confirm_apply(automode):
+                    return "  ✖ Dibatalkan user."
+
+        tool_result = await execute_tool(tc, {"cwd": cwd})
+
+        if is_git_repo(cwd) and filepath:
+            rel = os.path.relpath(filepath, cwd)
+            ok, msg = git_add_commit(rel, f"xyron: update {rel}", cwd)
+            if ok:
+                print(C.dim(f"  ⎇  git commit: update {rel}"))
+
+        return tool_result
+
+    elif tool_name == "execute_command":
+        cmd_str = tool_args.get("command", "")
+
+        DESTRUCTIVE = ["rm ", "rmdir", "dd ", "mkfs", "chmod 777", "sudo rm", "shred"]
+        is_destructive = any(d in cmd_str for d in DESTRUCTIVE)
+
+        if is_destructive and not automode:
+            print(f"\n  \033[33m⚠ Perintah berisiko: {cmd_str}\033[0m")
+            if not confirm_apply(automode):
+                return "  ✖ Dibatalkan user."
+
+        if "cwd" not in tool_args:
+            tool_args["cwd"] = cwd
+            tc = {**tc, "function": {**tc["function"], "arguments": json.dumps(tool_args)}}
+
+        return await execute_tool(tc, {"cwd": cwd})
+
+    else:
+        return await execute_tool(tc, {"cwd": cwd})
 
 
 async def start_interactive():
@@ -364,10 +489,9 @@ async def start_interactive():
         await provider.validate()
     except Exception as e:
         init_sp.stop()
-
         from utils.setup import run_setup_wizard, delete_saved_config
         delete_saved_config()
-        print_error_box(f"Koneksi gagal: {e}\n  Config lama dihapus. Menjalankan setup ulang...")
+        print_error_box(f"Koneksi gagal: {e}\n  Config lama dihapus. Setup ulang...")
         result = run_setup_wizard()
         from utils.config import _build
         config = _build(result["provider"], result["api_key"], result.get("model", "auto"))
@@ -385,6 +509,8 @@ async def start_interactive():
         model = model_selector(provider, model)
     save_model_history(provider.name, model)
 
+    cwd = os.getcwd()
+
     state = {
         "provider":      provider,
         "model":         model,
@@ -393,6 +519,8 @@ async def start_interactive():
         "active_skills": [],
         "roadmap":       None,
         "last_partial":  "",
+        "automode":      False,
+        "cwd":           cwd,
     }
 
     clear_screen()
@@ -404,11 +532,17 @@ async def start_interactive():
         state["history"] = saved
         print(C.dim(f"  ↺  Session restored  ·  {len(saved)} messages"))
 
+    if is_git_repo(cwd):
+        print(C.dim(f"  ⎇  git repo detected: {cwd}"))
+
     context_mgr = ContextManager()
 
     while True:
-        sys.stdout.write(C.orange("\n  ❯  "))
+        cwd_short = state["cwd"].replace(os.path.expanduser("~"), "~")
+        auto_badge = C.green(" ⚡") if state.get("automode") else ""
+        sys.stdout.write(C.orange(f"\n  {cwd_short}{auto_badge} ❯  "))
         sys.stdout.flush()
+
         try:
             raw_input = input()
         except (EOFError, KeyboardInterrupt):
@@ -434,12 +568,12 @@ async def start_interactive():
             print(C.dim(f"  ◈  Skills: {'  ·  '.join(s['name'] for s in detected)}"))
 
         relevant_files = context_mgr.get_relevant_files(user_input)
-        ctx_content = ""
+        ctx_content    = ""
         if relevant_files:
             print(C.dim(f"  ◈  Context: {' '.join(relevant_files[:3])}"))
             ctx_content = context_mgr.read_files(relevant_files)
 
-        cache_key = f"sys_{provider.name}_{'_'.join(sorted(s['name'] for s in state['active_skills']))}"
+        cache_key     = f"sys_{provider.name}_{'_'.join(sorted(s['name'] for s in state['active_skills']))}"
         system_prompt = prompt_cache.get(cache_key)
         if not system_prompt:
             system_prompt = build_system_prompt(
@@ -454,14 +588,14 @@ async def start_interactive():
         )
 
         messages = [
-            {"role": "system",  "content": system_prompt},
+            {"role": "system", "content": system_prompt},
             *state["history"],
-            {"role": "user",    "content": user_content},
+            {"role": "user",   "content": user_content},
         ]
 
         total_est = estimate_tokens(json.dumps(messages))
         if total_est > config["max_context_tokens"]:
-            print(C.dim("  ⟳  Trimming history to fit context window..."))
+            print(C.dim("  ⟳  Trimming history..."))
             state["history"] = truncate_to_budget(
                 state["history"],
                 config["max_context_tokens"],
@@ -478,7 +612,7 @@ async def start_interactive():
             "thinking":    state["thinking"],
         }
 
-        gen_spinner  = create_spinner("thinking" if state["thinking"] != "off" else "streaming")
+        gen_spinner     = create_spinner("thinking" if state["thinking"] != "off" else "streaming")
         gen_intercepted = False
         original_stream = provider.stream
 
@@ -497,7 +631,7 @@ async def start_interactive():
         tool_calls    = None
 
         try:
-            result       = await stream_with_auto_continue(provider, stream_params, state)
+            result        = await stream_with_auto_continue(provider, stream_params, state)
             full_response = result["response"]
             tool_calls    = result["tool_calls"]
 
@@ -520,20 +654,26 @@ async def start_interactive():
                     except Exception:
                         tool_args = {}
 
-                    detail = tool_args.get("query") or tool_args.get("path") or (tool_args.get("urls") or [""])[0] or ""
+                    detail = (
+                        tool_args.get("query")
+                        or tool_args.get("path")
+                        or tool_args.get("command")
+                        or (tool_args.get("urls") or [""])[0]
+                        or ""
+                    )
                     print_tool_badge(tool_name, detail)
 
                     spinner_type = (
-                        "tool_read"   if tool_name == "read_file" else
-                        "tool_write"  if tool_name == "write_file" else
-                        "tool_shell"  if tool_name == "execute_command" else
-                        "tool_grep"   if tool_name == "search_codebase" else
+                        "tool_read"   if tool_name == "read_file"       else
+                        "tool_write"  if tool_name == "write_file"      else
+                        "tool_shell"  if tool_name == "execute_command"  else
+                        "tool_grep"   if tool_name == "search_codebase"  else
                         "tool_generic"
                     )
                     tool_sp = create_spinner(spinner_type)
 
                     try:
-                        tool_result = await execute_tool(tc, {"cwd": os.getcwd()})
+                        tool_result = await handle_tool_with_features(tc, state, messages)
                     except Exception as e:
                         tool_result = f"Error: {e}"
 
@@ -546,8 +686,8 @@ async def start_interactive():
                         "content":      str(tool_result)[:4000],
                     })
 
-                full_response  = ""
-                tool_calls     = None
+                full_response   = ""
+                tool_calls      = None
                 gen_intercepted = False
 
                 loop_sp = create_spinner("streaming")
@@ -593,7 +733,6 @@ async def start_interactive():
     print(C.dim("\n  ✓  Session saved. Bye.\n"))
 
 
-
 async def run_task(task: str, forced_skill: str = None):
     config   = get_config()
     provider = create_provider(config["provider"], config["api_key"])
@@ -605,9 +744,9 @@ async def run_task(task: str, forced_skill: str = None):
     else:
         active_skills = detect_skills(task)
 
-    context_mgr  = ContextManager()
-    files        = context_mgr.get_relevant_files(task)
-    ctx_content  = context_mgr.read_files(files)
+    context_mgr   = ContextManager()
+    files         = context_mgr.get_relevant_files(task)
+    ctx_content   = context_mgr.read_files(files)
     system_prompt = build_system_prompt(active_skills, provider.get_system_prompt_appendix())
 
     messages = [
@@ -630,7 +769,6 @@ async def run_task(task: str, forced_skill: str = None):
     print_ai_footer()
     print()
     sys.exit(0)
-
 
 
 if __name__ == "__main__":

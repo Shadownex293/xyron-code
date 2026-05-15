@@ -15,19 +15,55 @@ MODULE_CATALOG = {
     "xyron security": {
         "id":          "xyron security",
         "name":        "Xyron Security",
-        "description": "Audit keamanan web — temukan celah, severity level, PoC, dan cara fix",
+        "description": "Audit keamanan web — celah, severity, PoC, cara fix, scan URL",
         "version":     "1.0.0",
         "skill_key":   "xsecurity",
         "tools":       ["security_scan_url"],
         "author":      "ShadowNex",
     },
-    "xyron github": {
-        "id":          "xyron github",
-        "name":        "Xyron GitHub",
-        "description": "Kelola GitHub langsung dari AI — buat repo, upload file/folder, buat branch, dan lainnya",
+    "xyron test": {
+        "id":          "xyron test",
+        "name":        "Xyron Test",
+        "description": "Auto-generate unit test, jalankan, dan laporkan hasilnya",
         "version":     "1.0.0",
-        "skill_key":   "github",
-        "tools":       ["github_create_repo", "github_list_repos", "github_upload_file", "github_upload_folder", "github_delete_repo", "github_list_files", "github_create_branch", "github_whoami"],
+        "skill_key":   "xyron-test",
+        "tools":       ["read_file", "write_file", "execute_command"],
+        "author":      "ShadowNex",
+    },
+    "xyron docs": {
+        "id":          "xyron docs",
+        "name":        "Xyron Docs",
+        "description": "Auto-generate README, API docs, dan dokumentasi project lengkap",
+        "version":     "1.0.0",
+        "skill_key":   "xyron-docs",
+        "tools":       ["read_file", "write_file", "list_directory"],
+        "author":      "ShadowNex",
+    },
+    "xyron translate": {
+        "id":          "xyron translate",
+        "name":        "Xyron Translate",
+        "description": "Konversi kode antar bahasa: JS→Python, Express→FastAPI, dll",
+        "version":     "1.0.0",
+        "skill_key":   "xyron-translate",
+        "tools":       ["read_file", "write_file"],
+        "author":      "ShadowNex",
+    },
+    "xyron scraper": {
+        "id":          "xyron scraper",
+        "name":        "Xyron Scraper",
+        "description": "Scrape data dari URL — harga, artikel, tabel — simpan ke JSON/CSV",
+        "version":     "1.0.0",
+        "skill_key":   "xyron-scraper",
+        "tools":       ["web_fetch", "write_file"],
+        "author":      "ShadowNex",
+    },
+    "xyron convert": {
+        "id":          "xyron convert",
+        "name":        "Xyron Convert",
+        "description": "Konversi file: CSV↔JSON, compress gambar, audio/video via ffmpeg",
+        "version":     "1.0.0",
+        "skill_key":   "xyron-convert",
+        "tools":       ["execute_command", "write_file", "read_file"],
         "author":      "ShadowNex",
     },
 }
@@ -66,7 +102,7 @@ def install_module(module_id):
             mid  = matches[0]
         else:
             available = ", ".join(f'"{k}"' for k in MODULE_CATALOG)
-            return False, f"Modul '{module_id}' tidak ditemukan.\nModul tersedia: {available}"
+            return False, f"Modul '{module_id}' tidak ditemukan.\nTersedia: {available}"
     if is_installed(mid):
         return False, f"Modul '{info['name']}' sudah terinstall."
     state = _load_state()
@@ -76,7 +112,7 @@ def install_module(module_id):
         f"✓ Modul '{info['name']}' v{info['version']} berhasil diinstall!\n"
         f"  Deskripsi : {info['description']}\n"
         f"  Tools     : {', '.join(info['tools'])}\n"
-        f"  Restart Xyron Codex agar modul aktif sepenuhnya."
+        f"  Restart Xyron Codex agar modul aktif."
     )
 
 def uninstall_module(module_id):
